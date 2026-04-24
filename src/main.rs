@@ -178,9 +178,12 @@ async fn do_update(
     let mut session = Session::new(user_agent, Some(credentials)).unwrap();
 
     for template in &mut metadata {
-        let Ok(content) = env.get_template(&template.id).and_then(|t| t.render(&context)) else {
-            eprintln!("Failed to render template {}!", template.id);
-            continue;
+        let content = match env.get_template(&template.id).and_then(|t| t.render(&context)) {
+            Ok(v) => v,
+            Err(err) => {
+                eprintln!("Failed to render template {}: {}", template.id, err);
+                continue;
+            }
         };
 
         let regen = should_regenerate(&template, &cache);
